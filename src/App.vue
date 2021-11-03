@@ -1,19 +1,22 @@
 <template>
     <div id="app">
-
-        <app-header/>
+<!--передаем функцию поиска в хедер-->
+        <app-header :changeSearch="changeSearch" />
 
         <div class="container">
             <h1 class="pt-3 pb-3">Персонажи Marvel</h1>
-<!--          <pre>{{characters}}</pre>-->
+<!--            <pre> search: {{search}}</pre>
+            <pre> searchCharacters: {{searchCharacters}}</pre>-->
           <!--         передача атрибута-->
             <app-modal :character="character" />
 
             <spinner v-if="loading"/>
 
             <div class="row">
+<!--              условия вывода сообщения о том что нет результата. если нет массива не идет загрузка то выводить сообщение-->
+              <h5 v-if="!searchCharacters.length && !loading"> ничего не найдено</h5>
               <!--         -->
-              <div v-for="(element, idx) in characters"
+              <div v-for="(element, idx) in searchCharacters"
                    :key="element.id"
                    class="card mb-3 clo-sm-12 clo-md-6 col-lg-4"
               >
@@ -45,6 +48,7 @@
         </div>
 
     </div>
+
 </template>
 
 <script>
@@ -64,20 +68,35 @@
                 loading: false,
                 characters: [],
                 characterIndex: 0,
+                search: '',
             }
         },
         methods: {
+          /* запрашииваем данные с сервера и получаем в виде json*/
           fetchCharacters: function () {
             fetch('https://netology-api-marvel.herokuapp.com/characters')
               .then(res => res.json())
               .then(json => this.characters = json);
 
           },
+         /* создаем функцию поиска*/
+          changeSearch: function (value) {
+            this.search = value
+          }
         },
+      /*вычисляемые свойства*/
         computed: {
           character: function () {
-            return this.characters[this.characterIndex] || null;
-          }
+            return this.searchCharacters[this.characterIndex] || null;
+          },
+          /*функция поиска через метод фильтра и индексации*/
+          searchCharacters: function () {
+            const {characters, search} = this
+            return characters.filter((character)=> {
+              return character.name.toLowerCase()
+                  .indexOf(search.toLowerCase()) !== -1
+            })
+          },
         },
       async mounted() {
           this.loading = true;
